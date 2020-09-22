@@ -1,0 +1,240 @@
+---
+title: "FinalProject"
+author: "Liam McFall, Cam Farrugia"
+date: "5/4/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(cowplot)
+library(dplyr)
+library(ggplot2)
+```
+
+# What is the goal of the visualization?
+
+In the round of 16 stage of the 2014 world cup, Did the home teams score more goals or did the away teams?
+
+## Data Collection
+
+How was the data collected?
+Is there any sampling bias that needs accounting for?
+
+## Data Loading
+
+```{r}
+
+worldcup<-read.csv("WorldCupMatches.csv", stringsAsFactors = FALSE)
+
+```
+
+## Data Manipulation
+
+# Should any variables be factors/categorical?
+
+The varibles are in the correct types already.
+
+# Are there any types of variables
+
+```{r}
+summary(worldcup)
+```
+# Do NA's need to be removed/omitted?
+
+Removing NA's would be dangerous in this example because only the Win Conditions column has data
+
+# If removing NA's do we lose data from other variables that we need?
+
+```{r}
+worldcupNA<-na.omit(worldcup)
+summary(worldcupNA)
+#We would only lose one data entry which isn't too bad, but it doesn't seem necessary to do so.
+```
+# Is imputation a better alternative in this case to account for NA's?
+
+The only reason Win Condition would have data in it is if the game went to overtime, so the imputation
+would be hard to code for this example because the data is a string in that column.
+
+# Does data need to be aggregated prior to visualization?
+
+Not for this example
+
+# Does data need to be filtered?
+
+To answer our question, yes!
+```{r}
+world2=worldcup %>% 
+  filter(Year == "2014", Stage=="Round of 16")
+```
+# Do multiple data sets need to be combined?
+
+Not for this example
+```{r}
+
+# Manipulation libraries
+library(dplyr)
+library(lubridate)
+
+# Check for NA
+#sum(is.na(data))
+# Remove NA's if you don't lose important data
+#data <- na.omit(data)
+
+# Check summary of data to see the current format each variable is in
+#summary(data)
+#str(data)
+
+# Change any data to the needed new format
+#data$date <- date(data$date)
+#data$exColumn <- factor(data$exColumn)
+
+# Other data manipulations
+# Dplyr library has tons of useful data manipulation tools and functions
+# https://rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf
+#data <- data %>% 
+#  filter(col2 = "string", col3 < num) %>% 
+#  left_join(data2)
+
+```
+
+## Type of visualization
+
+# What type of data are we using?
+
+Strings and Integers 
+
+# Are we looking at trends or timeseries data?
+
+Trends for this example
+
+# Are we showing a relationship between variables?
+
+Yes, between home/away teams and goals
+
+# Are we trying to show geographic data?
+
+Not for this example
+
+```{r}
+
+# R has base plotting capabilities, but ggplot has a lot more options
+library(ggplot2)
+
+# ggplot objects for a variety of types of charts
+#geom_point()
+#geom_line()
+#geom_histogram()
+#geom_tile()
+#geom_bar()
+# add coords_polar to geom_bar to make it a pie chart
+#geom_density()
+#geom_boxplot()
+
+```
+
+```{r}
+home<-ggplot(world2, aes(x=Home.Team.Initials, y=Home.Team.Goals, fill=Home.Team.Name))+geom_col()
+
+away<-ggplot(world2, aes(x=Away.Team.Initials, y=Away.Team.Goals, fill=Away.Team.Name))+geom_col()
+plot_grid(home, away)
+```
+
+There is a lot wrong with this picture though. The graphs ranges are different. The home teams graph scales up to 2 whereas the aways team only scales to 1. The color coding leads to assumptions that teams like Argentia played Algeria and so forth, but that was not the actual case. You can call this bias, or you can call this poor design choices, regardless one should not settle for this and look into how to make it better. 
+
+## Scale and Axis choices
+
+# Should any of the scales be nonlinear?
+
+Not for this one, but they do need to be of equal length.
+```{r}
+home<-ggplot(world2, aes(x=Home.Team.Initials, y=Home.Team.Goals, fill=Home.Team.Name))+geom_col()+coord_cartesian(ylim = c(0, 3))
+away<-ggplot(world2, aes(x=Away.Team.Initials, y=Away.Team.Goals, fill=Away.Team.Name))+geom_col()+coord_cartesian(ylim = c(0, 3))
+plot_grid(home, away)
+
+```
+
+# Should scales be reversed?
+
+```{r}
+home<-ggplot(world2, aes(x=Home.Team.Initials, y=Home.Team.Goals, fill=Home.Team.Name))+geom_col()+coord_flip()
+away<-ggplot(world2, aes(x=Away.Team.Initials, y=Away.Team.Goals, fill=Away.Team.Name))+geom_col()+coord_cartesian(xlim = c(0, 4))+coord_flip()
+plot_grid(home, away)
+
+```
+
+Probably not for this one, I would say the picture doesn't look as good. The only thing more visible are the team initals.
+
+# Are tick marks needed?
+
+Not for this example
+
+# What other theme choices should be considered?
+
+The color scheme to match the teams that played each other.
+
+```{r}
+home<-ggplot(world2, aes(x=Home.Team.Initials, y=Home.Team.Goals, fill=Home.Team.Name))+geom_col()+coord_cartesian(ylim = c(0, 3))+scale_fill_manual(
+  values=c("royalblue", "green", "orange", "purple","red", "cyan","pink", "skyblue"), limits=c("Argentina", "Belgium", "Brazil","Colombia", "Costa Rica", "France", "Germany","Netherlands"), breaks=c("Argentina", "Belgium", "Brazil","Colombia", "Costa Rica", "France", "Germany","Netherlands"), name="Home Team Name",labels=c("Argentina", "Belgium", "Brazil","Colombia", "Costa Rica", "France", "Germany","Netherlands")
+)
+
+away<-ggplot(world2, aes(x=Away.Team.Initials, y=Away.Team.Goals, fill=Away.Team.Name))+geom_col()+coord_cartesian(ylim = c(0, 3))+scale_fill_manual(
+  values=c("royalblue", "green", "orange", "purple","red", "cyan","pink", "skyblue"), limits=c("Switzerland", "USA", "Chile","Uruguay", "Greece", "Nigeria", "Algeria","Mexico"), breaks=c("Switzerland", "USA", "Chile","Uruguay", "Greece", "Nigeria", "Algeria","Mexico"), name="Away Team Name",labels=c("Switzerland", "USA", "Chile","Uruguay", "Greece", "Nigeria", "Algeria","Mexico")
+)
+plot_grid(home, away)
+```
+
+Now the colors from each graph correspond and if you match up the colors, those are the teams that played each other.
+```{r}
+
+# ggplot has a bunch of x and y scale options to choose from
+#scale_x_log10()
+#scale_y_log10()
+#scale_x_binned()
+#scale_x_reverse()
+#scale_y_binned()
+#scale_y_reverse()
+#coord_flip()
+#coord_polar()
+#expand_limits()
+
+
+```
+
+
+
+## Final Visualization
+
+```{r}
+home<-ggplot(world2, aes(x=Home.Team.Initials, y=Home.Team.Goals, fill=Home.Team.Name))+geom_col()+coord_cartesian(ylim = c(0, 3))+scale_fill_manual(
+  values=c("royalblue", "green", "orange", "purple","red", "cyan","pink", "skyblue"), limits=c("Argentina", "Belgium", "Brazil","Colombia", "Costa Rica", "France", "Germany","Netherlands"), breaks=c("Argentina", "Belgium", "Brazil","Colombia", "Costa Rica", "France", "Germany","Netherlands"), name="Home Team Name",labels=c("Argentina", "Belgium", "Brazil","Colombia", "Costa Rica", "France", "Germany","Netherlands")
+)
+
+away<-ggplot(world2, aes(x=Away.Team.Initials, y=Away.Team.Goals, fill=Away.Team.Name))+geom_col()+coord_cartesian(ylim = c(0, 3))+scale_fill_manual(
+  values=c("royalblue", "green", "orange", "purple","red", "cyan","pink", "skyblue"), limits=c("Switzerland", "USA", "Chile","Uruguay", "Greece", "Nigeria", "Algeria","Mexico"), breaks=c("Switzerland", "USA", "Chile","Uruguay", "Greece", "Nigeria", "Algeria","Mexico"), name="Away Team Name",labels=c("Switzerland", "USA", "Chile","Uruguay", "Greece", "Nigeria", "Algeria","Mexico")
+)
+plot_row<-plot_grid(home, away)
+
+title <- ggdraw() + 
+  draw_label(
+    "World Cup 2014: Round of 16 Results",
+    fontface = 'bold',
+    x = 0,
+    hjust = 0
+  ) +
+  theme(
+    # add margin on the left of the drawing canvas,
+    # so title is aligned with left edge of first plot
+    plot.margin = margin(0, 0, 0, 7)
+  )
+plot_grid(
+  title, plot_row,
+  ncol = 1,
+  # rel_heights values control vertical title margins
+  rel_heights = c(0.1, 1)
+)
+```
+
+There are always many ways to do things or answer questions. This way just one example showing a process of trying to make the visualization as clear as possible to the reader. 
